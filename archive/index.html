@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="author" content="Eric D. Weitzel">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="../sun.png">
+    <link rel="stylesheet" href="../stylesheet.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Mono%7CPT+Sans%7CPT+Serif">
+    <style>
+      .month {
+        border: none;
+        box-shadow: none;
+        color: var(--secondaryLabelColor);
+        font-weight: bold;
+        text-align: center;
+      }
+    </style>
+    <title>archive</title>
+  </head>
+  <body>
+    <header>
+        <div style="flex-grow: 10" class="title1">
+          archive
+        </div>
+        <nav>
+          <a href="../tags/index.html">tags</a>
+          <picture>
+            <source srcset="../leaf-dark.png" media="(prefers-color-scheme: dark)">
+            <img src="../leaf.png">
+          </picture>
+          <a href="../index.html">home</a>
+        </nav>
+        </header>
+    <main>
+      <div class="vstack">
+        <div class="month">october 2022</div>
+        <div class="view">
+          <header>
+            <span class="footnote">20 October 2022</span>
+            <a class="caption2 tag" href="tags/openbsd/">#openbsd</a>
+          </header>
+          <div>
+            <a class="headline" href="../2022/october/upgrading-to-openbsd-7_2/">Upgrading to OpenBSD 7.2</a>
+            <p class="subheadline">OpenBSD 7.2 is officially available, so let's perform a system upgrade.</p>
+            <a class="caption2" href="../2022/october/upgrading-to-openbsd-7_2/">Continue reading</a>
+          </div>
+        </div>
+        <div class="month">august 2022</div>
+        <div class="view">
+          <header>
+            <span class="footnote">28 August 2022</span>
+            <a class="caption2 tag" href="tags/c/">#c</a>
+          </header>
+          <div>
+            <a class="headline" href="../2022/august/generating-audio-with-pure-c/">Generating audio with pure C</a>
+            <p class="subheadline">I've been working on a project that requires the ability to generate uncompressed PCM audio. Luckily, C lets us do this <b>very</b> easily just using <code>struct</code>s and <code>fwrite</code>.</p>
+            <a class="caption2" href="../2022/august/generating-audio-with-pure-c/">Continue reading</a>
+          </div>
+        </div>
+        <div class="month">april 2022</div>
+        <div class="view">
+          <header>
+            <span class="footnote">22 April 2022</span>
+            <a class="caption2 tag" href="tags/openbsd/">#openbsd</a>
+          </header>
+          <div>
+            <a class="headline" href="../2022/april/upgrading-to-openbsd-7_1/">Upgrading to OpenBSD 7.1</a>
+            <p class="subheadline">Now that OpenBSD 7.1 has been released, it's time to start the incredibly easy task of performing a system upgrade.</p>
+            <a class="caption2" href="../2022/april/upgrading-to-openbsd-7_1/">Continue reading</a>
+          </div>
+        </div>
+        <div class="view">
+          <header>
+            <span class="footnote">1 April 2022</span>
+            <a class="caption2 tag" href="tags/openbsd/">#openbsd</a>
+          </header>
+          <div>
+            <a class="headline" href="../2022/april/persistent-display-brightness-on-openbsd-with-rc-and-wsconsctl/">Persistent display-brightness on OpenBSD with <code>rc</code> and <code>wsconsctl</code></a>
+            <p class="subheadline">Laptop users of OpenBSD know that there's no built-in functionality for keeping the display's brightness persistent across reboots. It's possible to use <code>rc(8)</code> and <code>wsconsctl(8)</code> to write the display's brightness setting to a file on shutdown and read it during startup.</p>
+            <a class="caption2" href="../2022/april/persistent-display-brightness-on-openbsd-with-rc-and-wsconsctl/">Continue reading</a>
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

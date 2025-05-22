@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="author" content="Eric D. Weitzel">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="../../../sun.png">
+    <link rel="stylesheet" href="../../../stylesheet.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Mono%7CPT+Sans%7CPT+Serif">
+    <title>Persistent display brightness on OpenBSD with rc and wsconsctl</title>
+  </head>
+  <body>
+    <header>
+      <div>
+        <div style="flex-grow:4 " class="title1">
+          Persistent display brightness on OpenBSD with <code>rc</code> and <code>wsconsctl</code>
+        </div>
+        <span class="footnote">1 April 2022</span>
+      </div>
+    </header>
+    <main>
+      <article>
+        <p>Laptop users of OpenBSD know that there's no built-in functionality for keeping the display's brightness persistent across reboots. It's possible to use <a href="https://man.openbsd.org/rc.8">rc(8)</a> and <a href="https://man.openbsd.org/wsconsctl.8">wsconsctl(8)</a> to write the display's brightness setting to a file on shutdown and read it during startup.</p>
+        <p>We'll start by creating <code>/etc/rc.shutdown</code> (if it doesn't exist) and add the following to it:
+<pre><div class="path">/etc/rc.shutdown</div><div>#!/bin/sh
+wsconsctl display.brightness | cut -f2 -d= > /var/brightness</div></pre>
+        and make it executable:
+<pre><div># chmod +x /etc/rc.shutdown</div></pre>
+        On shutdown, the value of <code>display.brightness</code> from <code>wsconsctl</code> gets written to <code>/var/brightness</code>.</p>
+        <p>Next, create <code>/etc/rc.local</code> (if it doesn't exist) and add the following:
+<pre><div class="path">/etc/rc.local</div><div>#!/bin/sh
+wsconsctl display.brightness=$(cat /var/brightness)
+</div></pre>
+        Make it executable:
+<pre><div># chmod +x /etc/rc.local</div></pre>
+        <p>During startup, <code>wsconsctl</code> will set <code>display.brightness</code> to the value in <code>/var/brightness</code>.</p>
+      </article>
+    </main>
+  </body>
+</html>

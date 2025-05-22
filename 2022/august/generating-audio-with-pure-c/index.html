@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="author" content="Eric D. Weitzel">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="../../../sun.png">
+    <link rel="stylesheet" href="../../../stylesheet.css">
+    <link rel="stylesheet" href="../../../syntax.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Mono%7CPT+Sans%7CPT+Serif">
+    <title>Generating audio with pure C</title>
+  </head>
+  <body>
+    <header>
+      <div>
+        <div style="flex-grow:4" class="title1">
+          Generating audio with pure C
+        </div>
+        <span class="footnote"><s>28 August 2022</s> &rarr; 8 September 2022</span>
+      </div>
+    </header>
+    <main>
+      <article>
+        <p>I've been working on a project that requires the ability to generate uncompressed PCM audio. Luckily, C lets us do this <b>very</b> easily just using <code>struct</code>s and <code>fwrite</code>.</p>
+        <span class="headline">Choosing a format</span>
+        <p>Although there are a lot of different digital audio formats out there, I decided to use the Waveform Audio File Format (WAVE) over the Audio Interchange File Format (or AIFF), since it's very well-documented and has been around a while. In fact, its original specification was written back in 1991 by IBM and Microsoft in a document that you can read <a href="http://www-mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/Docs/riffmci.pdf">here</a>. Both formats are widely-supported (since they're based on the ancient IFF specification) and can store PCM audio, but WAVE seems to be used more since Windows supports it out of the box. (Recent versions of Windows probably support AIFF too, but I neither know nor care. Sorry.)</p>
+        <span class="headline">Implementing the header</span>
+        <p>I decided to put everything in the header into nested <code>struct</code>s in order to follow the specifications as closely as possible. I also used <code>typedef</code>s and field names straight out of the documentation in order to keep things orderly.</p>
+        <pre><div class="path">wave.h</div><div><span class="comment">...</span>
+
+<span class="preprocessor">#define WAVE_FORMAT_PCM ((WORD)(</span><span class="number">0x0001</span><span class="preprocessor">))</span>
+
+<span class="keyword">typedef unsigned short</span>  <span class="type-declaration">WORD</span>;
+<span class="preprocessor">#if LONG_BIT == 32</span>
+<span class="keyword">typedef unsigned long</span>   <span class="type-declaration">DWORD</span>;
+<span class="preprocessor">#else</span>
+<span class="keyword">typedef unsigned int</span>    <span class="type-declaration">DWORD</span>;
+<span class="preprocessor">#endif</span>
+<span class="keyword">typedef</span> <span class="type-declaration">DWORD</span>           <span class="type-declaration">FOURCC</span>;
+<span class="keyword">typedef</span> <span class="type-declaration">FOURCC</span>          <span class="type-declaration">CKID</span>;
+<span class="keyword">typedef</span> <span class="type-declaration">DWORD</span>           <span class="type-declaration">CKSIZE</span>;
+
+<span class="keyword">struct</span> <span class="type">WAVE</span> {
+        <span class="type">CKID</span>    ckID;
+        <span class="type">CKSIZE</span>  ckSize;
+        <span class="type">FOURCC</span>  formType;
+
+        <span class="keyword">struct</span> <span class="type">ckFmt</span> {
+                <span class="type">CKID</span>    ckID;
+                <span class="type">CKSIZE</span>  ckSize;
+                <span class="type">WORD</span>    wFormatTag;
+                <span class="type">WORD</span>    wChannels;
+                <span class="type">DWORD</span>   dwSamplesPerSec;
+                <span class="type">DWORD</span>   dwAvgBytesPerSec;
+                <span class="type">WORD</span>    wBlockAlign;
+                <span class="type">WORD</span>    wBitsPerSample;
+        } ckFmt;
+
+        <span class="keyword">struct</span> <span class="type">ckWaveData</span> {
+                <span class="type">CKID</span>    ckID;
+                <span class="type">CKSIZE</span>  ckSize;
+        } ckWaveData;
+};
+
+<span class="comment">...</span></div></pre>
+        <span class="headline">A note about byte order</span>
+        <p>The primary drawback to using the WAVE format is that its header data uses a combination of both big- and little-endian data fields, which means we'll have to be able to specify the correct byte order for each field. I wrote a few functions based on <a href="https://developer.ibm.com/articles/au-endianc/">this IBM article</a> that let us detect the host byte order and force a different one if necessary:</p>
+<pre><div class="path">endian.h</div><div><span class="comment">/*
+ * Apparently, LITTLE_ENDIAN and BIG_ENDIAN are already defined in my macOS
+ * environment, so we'll remove their definitions just in case.
+ */
+<span class="preprocessor">#ifdef LITTLE_ENDIAN
+#undef LITTLE_ENDIAN
+#endif
+#ifdef BIG_ENDIAN
+#undef BIG_ENDIAN
+#endif
+#define LITTLE_ENDIAN</span>   <span class="number">0</span>
+<span class="preprocessor">#define BIG_ENDIAN</span>      <span class="number">1</span>
+
+<span class="comment">...</span></div></pre>
+<pre><div class="path">endian.c</div><div><span class="preprocessor">#include</span> <span class="string">"endian.h"</span>
+<span class="preprocessor">#include</span> <span class="string">"wave.h"</span>
+
+<span class="comment">/*
+ * [U]se a character pointer to the bytes of an int and then check its first
+ * byte to see if it is 0 or 1.
+ */</span>
+<span class="keyword">int</span>
+<span class="function">endian</span>(<span class="keyword">void</span>)
+{
+        <span class="keyword">int</span> i = <span class="number">1</span>;
+        <span class="keyword">char</span> *p = (<span class="keyword">char</span> *)&i;
+
+        <span class="keyword">if</span> (p[<span class="number">0</span>] == <span class="number">1</span>)
+            <span class="keyword">return</span> <span class="preprocessor">LITTLE_ENDIAN</span>;
+        <span class="keyword">else</span>
+            <span class="keyword">return</span> <span class="preprocessor">BIG_ENDIAN</span>;
+}
+
+<span class="type">WORD</span>
+<span class="other-declaration">htobw</span>(<span class="type">WORD</span> w)
+{
+        <span class="keyword">if</span> (<span class="function">endian</span>() == <span class="preprocessor">LITTLE_ENDIAN</span>)
+            <span class="keyword">return</span> (<span class="type">WORD</span>)(((w & <span class="preprocessor">UCHAR_MAX</span>) << <span class="number">8</span>) + ((w >> <span class="number">8</span>) & <span class="preprocessor">UCHAR_MAX</span>));
+
+        <span class="keyword">return</span> w;
+}
+
+<span class="type">DWORD</span>
+<span class="other-declaration">htobdw</span>(<span class="type">DWORD</span> dw)
+{
+        <span class="keyword">if</span> (<span class="function">endian</span>() == <span class="preprocessor">LITTLE_ENDIAN</span>)
+            <span class="keyword">return</span> (<span class="type">DWORD</span>)(((dw & <span class="number">0xff</span>) << <span class="number">24</span>) | ((dw & <span class="number">0xff00</span>) << <span class="number">8</span>) | ((dw & <span class="number">0xff0000</span>) >> <span class="number">8</span>) | ((dw & <span class="number">0xff000000</span>) >> <span class="number">24</span>));
+
+        <span class="keyword">return</span> dw;
+}
+
+<span class="type">WORD</span>
+<span class="other-declaration">htolw</span>(<span class="type">WORD</span> w)
+{
+        <span class="keyword">if</span> (<span class="function">endian</span>() == <span class="preprocessor">BIG_ENDIAN</span>)
+            <span class="keyword">return</span> (<span class="type">WORD</span>)(((w & <span class="preprocessor">UCHAR_MAX</span>) << <span class="number">8</span>) + ((w >> <span class="number">8</span>) & <span class="preprocessor">UCHAR_MAX</span>));
+
+        <span class="keyword">return</span> w;
+}
+
+<span class="type">DWORD</span>
+<span class="other-declaration">htoldw</span>(<span class="type">DWORD</span> dw)
+{
+        <span class="keyword">if</span> (<span class="function">endian</span>() == <span class="preprocessor">BIG_ENDIAN</span>)
+            <span class="keyword">return</span> (<span class="type">DWORD</span>)(((dw & <span class="number">0xff</span>) << <span class="number">24</span>) | ((dw & <span class="number">0xff00</span>) << <span class="number">8</span>) | ((dw & <span class="number">0xff0000</span>) >> <span class="number">8</span>) | ((dw & <span class="number">0xff000000</span>) >> <span class="number">24</span>));
+
+        <span class="keyword">return</span> dw;
+}
+</div></pre>
+        <div class="headline">Putting it all together</div>
+        <p>Now that we have a header that can store information and some helper functions to deal with byte order, it's time to write the WAVE header into a file. The following function, <code>wave_write()</code>, writes the audio sample data pointed to by <code>*ptr</code> to the file pointed to by <code>*stream</code>. Alternatively, passing a null pointer just writes the header.</p>
+<pre><div class="path">wave.c</div><div><span class="preprocessor">#include</span> <span class="string">"wave.h"</span>
+
+<span class="keyword">void</span>
+<span class="other-declaration">wave_write</span>(<span class="keyword">void</span> *ptr, <span class="type">WORD</span> wChannels, <span class="type">DWORD</span> dwSamplesPerSec, <span class="type">WORD</span> wBitsPerSample, <span class="other-type">size_t</span> nitems, <span class="other-type">FILE</span> *stream)
+{
+        <span class="keyword">struct</span> <span class="type">WAVE</span> wave;
+
+        wave.<span class="function">ckID</span> = <span class="function">htobdw</span>(<span class="number">0x52494646</span>);
+        wave.<span class="function">ckSize</span> = <span class="function">htoldw</span>((<span class="type">CKSIZE</span>)nitems + <span class="number">36</span>);
+        wave.<span class="function">formType</span> = <span class="function">htobdw</span>(<span class="number">0x57415645</span>);
+
+        wave.<span class="function">ckFmt</span>.<span class="function">ckID</span> = <span class="function">htobdw</span>(<span class="number">0x666d7420</span>);
+        wave.<span class="function">ckFmt</span>.<span class="function">ckSize</span> = <span class="number">16</span>;
+        wave.<span class="function">ckFmt</span>.<span class="function">wFormatTag</span> = <span class="function">htolw</span>(<span class="preprocessor">WAVE_FORMAT_PCM</span>);
+        wave.<span class="function">ckFmt</span>.<span class="function">wChannels</span> = <span class="function">htolw</span>(wChannels);
+        wave.<span class="function">ckFmt</span>.<span class="function">dwSamplesPerSec</span> = <span class="function">htolw</span>(dwSamplesPerSec);
+        wave.<span class="function">ckFmt</span>.<span class="function">dwAvgBytesPerSec</span> = <span class="function">htoldw</span>(wChannels * dwSamplesPerSec * (wBitsPerSample / <span class="number">8</span>));
+        wave.<span class="function">ckFmt</span>.<span class="function">wBlockAlign</span> = <span class="function">htolw</span>(wChannels * (wBitsPerSample / <span class="number">8</span>));
+        wave.<span class="function">ckFmt</span>.<span class="function">wBitsPerSample</span> = <span class="function">htolw</span>(wBitsPerS       
+        wave.<span class="function">ckWaveData</span>.<span class="function">ckID</span> = <span class="function">htobdw</span>(<span class="number">0x64617461</span>);
+        wave.<span class="function">ckWaveData</span>.<span class="function">ckSize</span> = <span class="function">htoldw</span>((<span class="type">CKSIZE</span>)nitems);
+
+        <span class="other-function">fwrite</span>(&wave, <span class="keyword">sizeof</span>(<span class="keyword">struct</span> <span class="type">WAVE</span>), <span class="number">1</span>, stream);
+
+        <span class="keyword">if</span> (ptr != <span class="keyword">NULL</span>)
+                <span class="other-function">fwrite</span>(ptr, <span class="keyword">sizeof</span>(<span class="type">WORD</span>), nitems, stream);
+}
+</div></pre>
+      </article>
+    </main>
+  </body>
+</html>

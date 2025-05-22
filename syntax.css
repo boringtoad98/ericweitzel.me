@@ -1,0 +1,91 @@
+.comment {
+  color: rgb(38, 117, 7);
+}
+
+.string {
+  color: rgb(196, 26, 22);
+}
+
+.keyword {
+  color: rgb(155, 35, 147);
+  font-weight: bold;
+}
+
+.number {
+  color: rgb(28, 0, 207);
+}
+
+.other-function {
+  color: rgb(108, 54, 169);
+}
+
+.other-type {
+  color: rgb(57, 0, 160);
+}
+
+.preprocessor {
+  color: rgb(100, 56, 32);
+}
+
+.type-declaration {
+  color: rgb(11, 79, 121);
+}
+
+.type {
+  color: rgb(28, 70, 104);
+}
+
+.function {
+  color: rgb(50, 109, 116);
+}
+
+@media (prefers-color-scheme: dark) {
+  .comment {
+    color: rgb(115, 167, 78);
+  }
+
+  .string {
+    color: rgb(252, 106, 93);
+  }
+
+  .number {
+    color: rgb(208, 191, 105);
+  }
+
+  .keyword {
+    color: rgb(252, 95, 163);
+    font-weight: bold;
+  }
+
+  .preprocessor {
+    color: rgb(253, 143, 63);
+  }
+
+  .type-declaration {
+    color: rgb(93, 216, 255);
+  }
+
+  .other-declaration {
+    color: rgb(65, 161, 192);
+  }
+
+  .type {
+    color: rgb(158, 241, 221);
+  }
+
+  .function {
+    color: rgb(103, 183, 164);
+  }
+
+  .other-function {
+    color: rgb(161, 103, 230);
+  }
+
+  .other-type {
+    color: rgb(208, 165, 255);
+  }
+
+  pre {
+    background: rgb(31, 31, 36);
+  }
+}

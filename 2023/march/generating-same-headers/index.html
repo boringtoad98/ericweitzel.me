@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="author" content="Eric D. Weitzel">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="../../../sun.png">
+    <link rel="stylesheet" href="../../../stylesheet.css">
+    <link rel="stylesheet" href="../../../syntax.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=IBM+Plex+Mono%7CIBM+Plex+Sans%7CIBM+Plex+Serif%7CPT+Mono%7CPT+Sans%7CPT+Serif">
+    <title>Generating SAME headers</title>
+  </head>
+  <body>
+    <header>
+      <div>
+        <div style="flex-grow:4" class="title1">
+          Generating SAME headers
+        </div>
+        <span class="footnote"><s>9 March 2023</s> &rarr; 14 June 2023</span>
+      </div>
+    </header>
+    <main>
+      <article>
+        <div class="hstack padding view">
+          <picture class="padding">
+            <source srcset="exclamationmark.triangle.dark.svg" media="(prefers-color-scheme: dark)">
+            <img src="exclamationmark.triangle.svg">
+          </picture>
+          <div class="caption2">While it is perfectly lawful to generate your own emergency alert messages, transmitting them is a crime and will get you into a LOT of trouble with the FCC. Do yourself a favor and don't try it.</div>
+        </div>
+        <p>Regular broadcast radio and television viewers will be all too familiar with the horrendous buzzing tone that precedes and follows the weekly Emergency Alert System (EAS) tests, but most probably don't realize that what they're hearing is actually data that has been specially encoded to convey details about weather or governmental emergencies. Information such as event type, location, and time is encoded as audible sound intended for dedicated receivers that listen for these messages, such as consumer weather receivers.</p>
+        <span class="headline">Specific Area Message Encoding</span>
+        <p>Specific Area Message Encoding, or SAME, is the protocol that was originally developed by the National Weather Service for use in warning the public about imminent severe weather events and natural disasters, but was adopted in the late 1990s by the FCC for use as part of the Emergency Alert System. A full message consists of four parts:</p>
+        <ul>
+          <li>The <b>header</b>, which consists of three data bursts.</li>
+          <li>
+            The <b>attention tone</b>, which may be one of two types:
+            <ul>
+              <li>The Emergency Alert System uses a combination of 853 and 960 Hz sine waves.</li>
+              <li>The National Weather Service uses a single 1050 Hz sine wave.</li>
+            </ul>
+            <p>Attention tones must be no less than 8 seconds and no greater than 25 seconds in duration, and are only included if a SAME message includes a voice message.</p>
+          </li>
+          <li>The <b>message</b>, most commonly computer-generated speech.</li>
+          <li>The <b>tail</b>, which consists of three more (shorter) data bursts.</li>
+        </ul>
+        <span class="headline">Modulation and encoding</span>
+        <p>The digital portions of a SAME message are binary AFSK-modulated with a bit period of 1.92 ms, or a bit rate of 520&frac56; bit/s. The <a href="https://www.govinfo.gov/content/pkg/CFR-2015-title47-vol1/pdf/CFR-2015-title47-vol1-part11.pdf">standard</a> defines a mark to be four cycles of a sine wave, and a space three cycles. We can find the corresponding frequencies easily with</p>
+        <br>
+        <math display="block">
+          <mrow>
+            <mi>f</mi>
+            <mo>=</mo>
+            <mfrac>
+              <mi>n</mi>
+              <mi>t</mi>
+            </mfrac>
+          </mrow>
+        </math>
+        <br>
+        where
+        <math>
+          <mi>n</mi>
+        </math>
+        is the number of cycles and
+        <math>
+          <mi>t</mi>
+        </math>
+        is the bit period in seconds:
+        <br><br>
+        <math display="block">
+          <mrow>
+            <msub>
+              <mi>f</mi>
+              <mi>mark</mi>
+            </msub>
+            <mo>=</mo>
+            <mfrac>
+              <mn>4</mn>
+              <mrow>
+                <mn>1.92</mn>
+                <mo>&times;</mo>
+                <msup>
+                  <mn>10</mn>
+                  <mn>-3</mn>
+                </msup>
+              </mrow>
+            </mfrac>
+            <mo>&approx;</mo>
+            <mn>2083.3</mn>
+            <mi>&nbsp;Hz</mi>
+          </mrow>
+        </math>
+        <br><br>
+        <math display="block">
+          <mrow>
+            <msub>
+              <mi>f</mi>
+              <mi>space</mi>
+            </msub>
+            <mo>=</mo>
+            <mfrac>
+              <mn>3</mn>
+              <mrow>
+                <mn>1.92</mn>
+                <mo>&times;</mo>
+                <msup>
+                  <mn>10</mn>
+                  <mn>-3</mn>
+                </msup>
+              </mrow>
+            </mfrac>
+            <mo>=</mo>
+            <mn>1562.5</mn>
+            <mi>&nbsp;Hz</mi>
+          </mrow>
+        </math>
+        <br>
+        <p>A SAME message is a string of 7-bit characters, each encoded as an 8-bit byte with the most significant bit null. In practice, however, this bit is 0. Data is non-return-to-zero-encoded, meaning a bit is represented either by a mark or a space. Logic 1 is represented by a mark and logic 0 is represented by a space.</p>
+        <span class="headline">Message format</span>
+        <p></p>
+        <span class="headline">Putting it all together</span>
+        <p>At a bare minimum, the architecture of our program will have to include the following parts:</p>
+        <ul>
+          <li>A sine wave generator</li>
+          <li>An AFSK encoder</li>
+          <li>An audio file interface</li>
+        </ul>
+        <p>I'll be using the WAVE file functions I detailed in a previous post since we're going to be generating 16-bit PCM data.</p>
+        <span class="headline">Sine wave generator</span>
+        <p>Recall that the amplitude of a sine wave as a function of time is</p>
+        <math display="block">
+          <mrow>
+            <mi>y</mi>
+            <mo>(</mo>
+            <mi>t</mi>
+            <mo>)</mo>
+          </mrow>
+          <mo>=</mo>
+          <mrow>
+            <mi>A</mi>
+            <mo>sin</mo>
+            <mo>(</mo>
+            <mi>&omega;</mi>
+            <mi>t</mi>
+            <mo>+</mo>
+            <mi>&phi;</mi>
+            <mo>)</mo>
+          </mrow>
+        </math>
+        <p>where:</p>
+        <pre><div class="path">sine.c</div><div><span class="other-function">size_t</span>
+<span class="function">sine</span>(<span class="keyword">float</span> amplitude, <span class="keyword">unsigned long</span> cycles, <span class="keyword">float</span> frequency, <span class="other-type">FILE</span> *stream)
+{
+        <span class="type">WORD</span> *buf = NULL;
+        <span class="keyword">double</span> phi = <span class="number">0</span>, omega = (<span class="number">2</span> * <span class="preprocessor">M_PI</span> * frequency) / (<span class="keyword">double</span>)<span class="preprocessor">SAMPLE_RATE</span>;
+        <span class="other-type">size_t</span> ret = <span class="number">0</span>;
+        <span class="keyword">float</span> A = amplitude * (<span class="preprocessor">WORD_MAX</span> / <span class="number">2</span>);
+        <span class="other-type">size_t</span> samples = cycles * (<span class="preprocessor">SAMPLE_RATE</span> / frequency);
+        
+        buf = (<span class="type">WORD</span> *)<span class="other-function">malloc</span>(samples * <span class="keyword">sizeof</span>(<span class="type">WORD</span>));
+        
+        <span class="keyword">for</span> (; ret &lt; samples; ++ret) {
+                phi += omega;
+                buf[ret] = (<span class="keyword">short</span>)(<span class="other-function">sin</span>(phi) * A);
+        }
+        
+        <span class="other-function">fwrite</span>(buf, <span class="keyword">sizeof</span>(<span class="type">WORD</span>), ret, stream);
+        
+        <span class="keyword">return</span> ret;
+}</div></pre>
+      <p>The <b><code>sine</code></b> function takes an amplitude between 0 and 1, a number of cycles, a frequency, and an output file as arguments. A buffer of <code>WORD</code>s called <code>buf</code> holds all of our samples. We create a <i>phase accumulator</i>, called <code>phi</code>, to keep track of the phase of the sine wave at each sample. Angular frequency, or <code>omega</code>, is the rate of change of our output waveform. <code>A</code> is the scale factor that is applied to a sample before it's stored in the buffer.</p>
+      <p>First, the required number of samples is calculated in advance and saved in <code>samples</code>, which is then used to allocate the sample buffer. Sample calculation is done by first incrementing the phase accumulator by the angular frequency, then calculating the sample's amplitude before finally casting it as a signed value and storing it in the buffer.</p>
+      <p>After all of our samples have been generated, we write them to the output stream. While all of the above is taking place, we keep track of the actual number of samples generated and return it for later use.</p>
+      <span class="headline">AFSK modulator</span>
+      <div class="hstack view">
+        <span class="caption2"></span>
+      </div>
+      </article>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="author" content="Eric D. Weitzel">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="../../../sun.png">
+    <link rel="stylesheet" href="../../../stylesheet.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Mono%7CPT+Sans%7CPT+Serif">
+    <title>Upgrading to OpenBSD 7.2</title>
+  </head>
+  <body>
+    <header>
+      <div>
+        <div style="flex-grow:4 " class="title1">
+          Upgrading to OpenBSD 7.2
+        </div>
+        <span class="footnote">20 October 2022</span>
+      </div>
+    </header>
+    <main>
+      <article>
+        <p>OpenBSD 7.2 is officially available, so let's perform a system upgrade.</p>
+        <p>
+          As usual, we can use <code><a href="https://man.openbsd.org/sysupgrade">sysupgrade(8)</a></code> to upgrade to 7.2 automatically:
+          <pre><div># sysupgrade</div></pre>
+          Be aware, though, that this will fetch and install all available file sets. If you'd prefer to <a href="https://www.openbsd.org/faq/upgrade72.html#InteractiveUpgrade">perform an interactive upgrade</a>, you can manually download the latest ramdisk kernel, stick it in your root directory, and boot that instead. Take care to verify its integrity with <code><a href="https://man.openbsd.org/signify">signify(1)</a></code>.</p>
+        </p>
+        <p>
+          After the kernel upgrade, make sure you run <code><a href="https://man.openbsd.org/sysmerge">sysmerge(8)</a></code> as usual. This will ensure your configuration files are up-to-date:
+          <pre><div># sysmerge</div></pre>
+        </p>
+        <p>
+          After an unattended upgrade, <code><a href="https://man.openbsd.org/fw_update">fw_update(8)</a></code> will run automatically. If you're on a laptop like I am, this step will probably fail since you don't have a network connection. Be sure to run it manually once you're online. Assuming everything went off without a hitch, your system is ready to go. As always, you may always <a href="https://www.openbsd.org/faq/upgrade72.html">consult the official FAQ</a>.
+        </p>
+        <div class="headline">Recommended system maintenance</div>
+        <p>
+          I suggest using <code><a href="https://man.openbsd.org/cron">cron</a></code> to keep your packages up-to-date. You might also want to consider using it to run <code><a href="https://man.openbsd.org/fw_update">fw_update(8)</a></code> periodically. For example, I check for package updates once a day and for firmware updates once a week.
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

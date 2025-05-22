@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0">
+  <channel>
+    <link>https://ericweitzel.me</link>
+    <title>ericweitzel.me</title>
+    <description>Under construction</description>
+    <item>
+      <link>
+        https://ericweitzel.me/2022/august/generating-audio-with-pure-c/
+      </link>
+      <title>
+        Generating audio with pure C
+      </title>
+      <description>
+        I've been working on a project that requires the ability to generate uncompressed PCM audio. Luckily, C lets us do this very easily just using structs and fwrite.
+      </description>
+    </item>
+    <item>
+      <link>
+        https://ericweitzel.me/2022/april/persistent-display-brightness-on-openbsd-with-rc-and-wsconsctl/
+      </link>
+      <title>
+        Persistent display brightness on OpenBSD with rc and wsconsctl
+      </title>
+      <description>
+        Laptop users of OpenBSD know that there's no built-in functionality for keeping the display's brightness persistent across reboots. It's possible to use rc(8) and wsconsctl(8) to write the display's brightness setting to a file on shutdown and read it during startup.
+      </description>
+    </item>
+  </channel>
+</rss>

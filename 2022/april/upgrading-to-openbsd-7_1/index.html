@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="author" content="Eric D. Weitzel">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="../../../sun.png">
+    <link rel="stylesheet" href="../../../stylesheet.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Mono%7CPT+Sans%7CPT+Serif">
+    <title>Upgrading to OpenBSD 7.1</title>
+  </head>
+  <body>
+    <header>
+      <div>
+        <div style="flex-grow:4 " class="title1">
+          Upgrading to OpenBSD 7.1
+        </div>
+        <span class="footnote"><s>22 April 2022</s> &rarr; 5 May 2022</span>
+      </div>
+    </header>
+    <main>
+      <article>
+        <b>
+          <i>
+            <p>
+              Using <code>sysupgrade</code> will cause your system to fetch all file sets. If you would rather choose your own, use <code><a href="https://man.openbsd.org/signify">signify(1)</a></code> instead.
+            </p>
+          </i>
+        </b>
+        <p>Now that OpenBSD 7.1 has been released, it's time to start the incredibly easy task of performing a system upgrade.</p>
+        <p>For a typical unattended upgrade, all we have to do is run <code><a href="https://man.openbsd.org/sysupgrade">sysupgrade(8)</a></code> and let OpenBSD upgrade itself:</p>
+          <pre><div># sysupgrade</div></pre>
+          <p>That's it. Seriously. Under certain circumstances, <code><a href="https://man.openbsd.org/sysmerge">sysmerge(8)</a></code> fails to automatically update the required configuration files. In that case, we can just run it manually:</p>
+          <pre><div># sysmerge</div></pre>
+        <p>If you want to upgrade another way, <a href="https://www.openbsd.org/faq/upgrade71.html">the official FAQ has an excellent upgrade guide</a>.</p>
+      </article>
+    </main>
+  </body>
+</html>
